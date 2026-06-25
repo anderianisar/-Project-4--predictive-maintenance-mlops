@@ -1,66 +1,66 @@
-# -Project-4--predictive-maintenance-mlops
-# Predictive Maintenance MLOps Pipeline ⚙️📊
+# Production-Grade Predictive Maintenance System (MLOps Lifecycle)
 
-A production-ready Machine Learning Operations (MLOps) pipeline designed to predict industrial equipment failure. This repository contains the implementation of a full model lifecycle workflow, divided into experiment tracking (Lab 13) and model registry deployment with rollback capabilities (Lab 14) using **MLflow**, **XGBoost**, and **Scikit-Learn**.
-
----
-
-## 🚀 Project Overview
-
-The objective of this project is to build a systematic, reproducible machine learning infrastructure for predictive maintenance. Instead of treating machine learning as a series of isolated scripts, this project demonstrates how to organize ML code, log telemetry metrics automatically, version models, and manage real-world deployment states (Staging ➔ Production).
-
-### Key Architectural Phases:
-1. **Synthetic Data Engineering & EDA:** Simulating 10,000 realistic equipment sensor profiles (temperature, vibration, pressure, RPM, and maintenance age).
-2. **Experiment Tracking (Lab 13):** Evaluating multiple algorithms (Logistic Regression, Random Forest, and XGBoost) while systematically logging parameters and performance indicators to an MLflow Tracking Server.
-3. **Model Registry & Lifecycle Governance (Lab 14):** Isolating the champion model, adding metadata tags, promoting it through lifecycle environments, and verifying an automated fallback mechanism.
+Welcome to the ultimate finale of the ML Engineering journey. This project showcases the complete end-to-end MLOps deployment pipeline for industrial equipment predictive maintenance. Over the course of Weeks 13 to 16, this repository evolved from a local model exploration workspace into a fully automated, self-healing, cloud-monitored, production REST API.
 
 ---
 
-## 📊 Phase 1: Experiment Tracking (Lab 13)
+## 🏗️ System Architecture Overview
 
-In this phase, a tracking server was initialized to compare a collection of baseline classifier models. 
+This project implements a closed-loop MLOps system that balances real-time model serving with automated statistical governance.
 
-### Performance Metrics Captured
-The pipeline automatically computes and streams the following metrics to the dashboard for evaluation:
-* **Accuracy & Precision**
-* **Recall & F1-Score**
-* **ROC AUC (Area Under the Receiver Operating Characteristic)**
+[Image of MLOps pipeline architecture showing data engineering model training API deployment drift detection and automated retraining loop]
 
-### Expected Baseline Performance
-The algorithms converge to the following relative evaluation bands:
-* **XGBoost:** Highest performance (`ROC AUC ~0.92 - 0.95`)
-* **Random Forest:** Moderate performance (`ROC AUC ~0.90 - 0.93`)
-* **Logistic Regression:** Linear baseline constraints (`ROC AUC ~0.85 - 0.88`)
+1. **Production Gateway**: FastAPI serves failure predictions under high-throughput constraints.
+2. **Telemetry Tracking**: Real-time server diagnostics are collected locally via a polling infrastructure.
+3. **Statistical Governance**: incoming feature distributions are monitored against training baselines to detect drift.
+4. **Self-Healing Retraining Loop**: Drif detection triggers automated cloud training pipelines to push fresh model weights back to the registry.
 
 ---
 
-## 📑 Phase 2: Model Registry & Governance (Lab 14)
+## 📅 Week-by-Week Breakdown & Deliverables
 
-Once the experiments were logged, the MLflow Model Registry was utilized to transition the optimal model into an operational asset.
+### 🧪 Weeks 13 & 14: Model Tracking, Versioning & Rollback Strategy
+* **Experiment Tracking**: Integrated **MLflow** to track hyperparameter configurations, metrics, and training run schemas.
+* **Model Registry**: Saved and versioned trained weights directly under the `PredictiveMaintenance` model namespace.
+* **Transformation Pipeline**: Serialized feature normalization weights into `scaler.pkl` to prevent data leakage during deployment.
+* **Rollback Auditing**: Implemented a fallback validation framework simulating model stage movements, ensuring that the system can gracefully rollback to Version 1 (`Production` stage) if secondary updates fail evaluation.
 
-### Workflow Implemented:
-* **Setup Registry Client:** Connecting a programmatic client to query backend run databases and sort runs dynamically by performance.
-* **Model Registration:** Storing the champion XGBoost run as a version-controlled entity (`PredictiveMaintenance` Version 1).
-* **Metadata & Documentation Auditing:** Stamping the registered artifact with explicit tracking tags (`validation_status: passed`, `framework: xgboost`, `team: data-science`).
-* **Lifecycle State Transitions:** Promoting the model through gated lifecycle environments:
-  $$\text{Unassigned} \longrightarrow \text{Staging} \longrightarrow \text{Production}$$
-* **Production Inference Pipeline:** Building an abstract operational wrapper function (`predict_equipment_failure`) that loads the current model using its active deployment stage tag, decoupling infrastructure modifications from runtime code.
-* **Failover Rollback Testing:** Registering a secondary model version (Version 2) to simulate a faulty release, followed by an instantaneous rollback execution targeting the stable Version 1 asset.
+### 🌐 Week 15: Production REST API & Live Metrics Telemetry
+* **Microservice Framework**: Wrapped the production MLflow model inside a lightweight, highly responsive **FastAPI** web server application (`api/main.py`).
+* **Data Validation**: Structured input schemas using Pydantic V2 to enforce data types for features (`temperature`, `vibration`, `pressure`, `rpm`, `age_days`).
+* **Telemetry Diagnostics (`/metrics`)**: Designed localized metrics tracking to capture runtime data payload trends, including:
+  * Total request counters.
+  * Anomalies/Failure predictions captured by the model.
+  * Real-time rolling prediction latency (in milliseconds).
+* **Live Dashboarding (`monitor_dashboard.py`)**: Built a separate script that pulls diagnostic logs every 5 seconds to provide an active system health overview.
+* **Stress Load Testing (`load_test.py`)**: Validated system stability by throwing 100 concurrent requests at the prediction endpoints.
+
+### 🔄 Week 16: Automated Drift Detection & CI/CD Pipelines
+* **Statistical Drift Monitoring (`drift_detector.py`)**: Implemented a statistical detector utilizing the **Kolmogorov-Smirnov test (KS-Test)**. It actively evaluates current data arrays against baseline distributions, writing results to `drift_report.json`.
+* **Autonomous Retraining Pipeline (`retrain_pipeline.py`)**: Engineered a self-healing script that automatically triggers when significant distribution deviations are caught. It ingests new parameters, fits an updated **XGBoost Classifier**, and registers Version 3 directly to MLflow.
+* **Continuous Integration (`.github/workflows/test.yml`)**: Configured a **GitHub Actions** script that listens for pushes to the `main` branch, spins up a virtual Linux server, builds dependencies, and runs automated `pytest` unit tests.
+* **Scheduled Operations (`.github/workflows/retrain.yml`)**: Set up a weekly CRON tab scheduler to automatically monitor drift trends, execute retraining runs, and preserve historical drift artifact logs.
 
 ---
 
-## 🛠️ Tech Stack & Environment Setup
+## 📂 Project Directory Structure
 
-### Core Libraries Used
-* **MLflow** (Experiment Tracking, Registry Client, PyFunc Loading)
-* **XGBoost** (Gradient Boosting Classifier)
-* **Scikit-Learn** (Data Splitting, Feature Scaling, Metrics Evaluation)
-* **Pandas & NumPy** (Data Manipulation & Synthesis)
-* **Matplotlib & Seaborn** (Exploratory Visualizations)
-
-### Running Locally (PyCharm Setup)
-1. Clone the repository and navigate to your project directory.
-2. Initialize and activate your virtual environment (`.venv`).
-3. Install the project dependencies:
-   ```bash
-   pip install mlflow scikit-learn pandas numpy matplotlib seaborn xgboost
+```text
+Real-World-ML-Engineering/
+├── .github/
+│   └── workflows/
+│       ├── test.yml                 # Automated testing CI pipeline
+│       └── retrain.yml              # Scheduled retraining workflow
+├── api/
+│   └── main.py                      # Core FastAPI prediction server
+├── tests/
+│   └── test_model.py                # Automated pytest validation test suites
+├── drift_detector.py                # Kolmogorov-Smirnov statistical logic
+├── test_drift.py                    # Evaluator script for data distribution shifts
+├── retrain_pipeline.py              # Automated XGBoost retraining engine
+├── monitor_dashboard.py             # Active telemetry visualization suite
+├── test_api.py                      # Endpoint functionality matrix tester
+├── load_test.py                     # 100-request automated stress load engine
+├── scaler.pkl                       # Feature normalization pipeline weights
+├── requirements.txt                 # Complete project dependency manifest
+└── README.md                        # Documentation handbook
